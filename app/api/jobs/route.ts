@@ -59,7 +59,7 @@ export const POST = withRoute(async (req: Request) => {
     .insert({ ...body, status: "PENDING_QUOTE" })
     .select()
     .single();
-  if (error) throw new Error(error.message);
+  if (error || !data) throw new Error(error?.message ?? "Insert failed");
 
   await audit({ jobId: data.id, userId: ctx.user.id, action: "JOB_CREATED", table: "jobs", recordId: data.id, newValue: { job_code: data.job_code, customer_name: data.customer_name } });
   return created(data);

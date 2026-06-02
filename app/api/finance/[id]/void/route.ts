@@ -10,13 +10,23 @@ const schema = z.object({ reason: z.string().min(1, "ระบุเหตุผ
 export const POST = withRoute(async (req: Request, { params }: Params) => {
   const ctx = await requirePermission("finance", "void");
   const { reason } = schema.parse(await req.json());
+
   const { data, error } = await ctx.supabase
     .from("finance_entries")
-    .update({ is_voided: true, void_reason: reason, voided_at: new Date().toISOString(), voided_by: ctx.user.id })
+    .update({
+      is_voided: true,
+      void_reason: reason,
+      voided_at: new Date().toISOString(),
+      voided_by: ctx.user.id,
+    })
     .eq("id", params.id)
     .select()
     .single();
-  if (error) throw new Error(error.message);
-  await audit({ jobId: data.job_id, userId: ctx.user.id, action: "FINANCE_VOID", table: "finance_entries", recordId: params.id, newValue: { reason } });
+  if (error || !data) throw new Error(error?.message ?? "Void failed");
+
+  await audit({
+    jobId: data.job_id, userId: ctx.user.id, action: "FINANCE_VOID",
+    table: "finance_entries", recordId: params.id, newValue: { reason },
+  });
   return ok(data);
 });

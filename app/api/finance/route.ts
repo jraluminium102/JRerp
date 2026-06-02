@@ -47,6 +47,6 @@ export const POST = withRoute(async (req: Request) => {
     .insert({ ...body, is_auto_created: false })
     .select()
     .single();
-  if (error) throw new Error(error.message);
+  if (error || !data) throw new Error(error?.message ?? "Insert failed");
   return created(data);
 });

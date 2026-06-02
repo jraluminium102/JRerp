@@ -5,7 +5,7 @@ import { ok } from "@/lib/bff/response";
 
 type Params = { params: { id: string } };
 const schema = z.object({
-  role: z.enum(["ADMIN", "SALES", "DESIGNER", "PRODUCTION", "INSTALLER", "ACCOUNTING", "VIEWER"]).optional(),
+  role: z.enum(["ADMIN","SALES","DESIGNER","PRODUCTION","INSTALLER","ACCOUNTING","VIEWER"]).optional(),
   is_active: z.boolean().optional(),
 });
 
@@ -13,9 +13,14 @@ const schema = z.object({
 export const PATCH = withRoute(async (req: Request, { params }: Params) => {
   const ctx = await requirePermission("users", "write");
   const body = schema.parse(await req.json());
+
   const { data, error } = await ctx.supabase
     .from("profiles").update(body).eq("id", params.id).select().single();
-  if (error) throw new Error(error.message);
-  await audit({ userId: ctx.user.id, action: "USER_UPDATED", table: "profiles", recordId: params.id, newValue: body });
+  if (error || !data) throw new Error(error?.message ?? "Update failed");
+
+  await audit({
+    userId: ctx.user.id, action: "USER_UPDATED",
+    table: "profiles", recordId: params.id, newValue: body,
+  });
   return ok(data);
 });
