@@ -5,6 +5,17 @@
 
 ---
 
+## 🟢 สถานะ: Phase 1 COMPLETE — พร้อมใช้งานจริง
+
+- **เว็บใช้งานจริง:** https://j-rerp.vercel.app *(อย่าใช้ลิงก์ `…git-main…` — เป็น preview ที่ Vercel ล็อก)*
+- **เข้าระบบ admin:** `admin@jr.local` / `JRoms@2026` (ควรเปลี่ยนรหัสเมื่อใช้จริง)
+- **ผ่าน live test 31/31** บน production — ดู `docs/qa/phase1-report.html`
+- ครอบคลุม: Sales (ใบเสนอราคา→มัดจำ) · Production · Installation · Issues · Finance (รับเงิน/ค้างรับ/void) · Dashboard · Users/RBAC
+
+**เพิ่มพนักงานใหม่:** ให้สมัครผ่านหน้า login (ถ้า Supabase เปิดยืนยันอีเมล ต้องยืนยันก่อน) → admin เข้าเมนู **Users** กำหนด role ให้
+
+---
+
 ## สถาปัตยกรรม (BFF)
 
 ```

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>JR OMS — Phase 1 สรุปความพร้อมใช้งาน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--navy:#1F4E78;--ink:#0f172a;--mut:#64748b;--line:#e2e8f0;--bg:#f1f5f9;--card:#fff;--pass:#10b981;--warn:#f59e0b;--info:#3b82f6}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter','Noto Sans Thai',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+  .wrap{max-width:1000px;margin:0 auto;padding:32px 20px 80px}.tnum{font-variant-numeric:tabular-nums}
+  .hero{background:linear-gradient(135deg,#0c1f37,#1e3a5f 55%,#16324d);color:#fff;border-radius:24px;padding:36px;position:relative;overflow:hidden}
+  .hero::after{content:"";position:absolute;right:-60px;top:-60px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(16,185,129,.4),transparent 70%)}
+  .hero h1{font-size:26px;font-weight:700}.hero .sub{color:#bcd3ea;font-size:14px;margin-top:6px}
+  .verdict{display:inline-flex;align-items:center;gap:8px;margin-top:18px;padding:10px 18px;border-radius:999px;font-weight:600;font-size:15px;background:rgba(16,185,129,.18);color:#a7f3d0;border:1px solid rgba(16,185,129,.45)}
+  .hero .meta{display:flex;gap:22px;flex-wrap:wrap;margin-top:18px;font-size:13px;color:#9fc0dd}.hero .meta b{color:#fff}
+  section{margin-top:26px}h2{font-size:19px;font-weight:700;color:var(--navy);margin-bottom:14px;display:flex;gap:9px;align-items:center}
+  h2 .dot{width:9px;height:9px;border-radius:50%;background:var(--navy)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 1px 3px rgba(15,23,42,.04)}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;text-align:center}
+  .stat .v{font-size:28px;font-weight:700}.stat .l{font-size:12px;color:var(--mut);margin-top:2px}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{text-align:left;color:var(--mut);font-weight:600;font-size:12px;padding:9px 10px;border-bottom:2px solid var(--line)}
+  td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}tr:last-child td{border-bottom:none}
+  code{background:#f1f5f9;padding:1px 6px;border-radius:5px;font-size:12px;color:#334155;font-family:ui-monospace,Menlo,monospace}
+  .chip{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:7px;font-size:12px;font-weight:600}
+  .c-pass{background:#dcfce7;color:#15803d}.c-done{background:#dbeafe;color:#1d4ed8}.c-defer{background:#e2e8f0;color:#475569}
+  .ok{color:var(--pass);font-weight:700}
+  .url{background:#0c1f37;color:#fff;border-radius:14px;padding:16px 18px;margin-top:12px;font-size:14px}
+  .url a{color:#7dd3fc;font-weight:600;text-decoration:none}.url b{color:#fff}
+  .muted{color:var(--mut);font-size:13px}.foot{margin-top:30px;padding-top:18px;border-top:1px solid var(--line);font-size:12.5px;color:var(--mut)}
+  @media print{body{background:#fff}.hero::after{display:none}}
+</style>
+</head>
+<body><div class="wrap">
+
+  <div class="hero">
+    <h1>JR OMS — Phase 1 พร้อมใช้งานจริง</h1>
+    <div class="sub">Core MVP + P0 ครบ · ทดสอบสดบน production (Supabase + Vercel) ด้วยผู้ใช้จริง ไม่ใช่แค่ code analysis</div>
+    <div class="verdict">✅ Phase 1 COMPLETE — ผ่าน live test ทุกชุด พร้อมเปิดใช้งาน</div>
+    <div class="meta"><div>โปรเจกต์ <b>JR Aluminium and Glass</b></div><div>วันที่ <b>3 มิ.ย. 2026</b></div><div>Stack <b>Next.js 14 · Supabase · Vercel (BFF)</b></div></div>
+  </div>
+
+  <section>
+    <div class="stats">
+      <div class="stat"><div class="v ok">31/31</div><div class="l">live tests ผ่าน</div></div>
+      <div class="stat"><div class="v ok">4/4</div><div class="l">P0 แก้ครบ</div></div>
+      <div class="stat"><div class="v ok">6</div><div class="l">บั๊ก integrity แก้</div></div>
+      <div class="stat"><div class="v ok">7</div><div class="l">RBAC roles คุมจริง</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="dot"></span>ลิงก์ใช้งานจริง</h2>
+    <div class="url">
+      เว็บ (พนักงานใช้ลิงก์นี้): <a href="https://j-rerp.vercel.app">https://j-rerp.vercel.app</a><br>
+      เข้าระบบ admin: <b>admin@jr.local</b> / <b>JRoms@2026</b> (เปลี่ยนรหัสเมื่อใช้จริง)<br>
+      <span style="color:#9fc0dd;font-size:12.5px">⚠ อย่าใช้ลิงก์ <code style="color:#fca5a5">…git-main…</code> — เป็น preview ที่ Vercel ล็อกไว้ พนักงานเข้าไม่ได้</span>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="dot"></span>ผลการทดสอบสด (รันบน production จริง)</h2>
+    <div class="card">
+      <table>
+        <thead><tr><th>ชุดทดสอบ</th><th style="width:80px">ผล</th><th>ครอบคลุม</th></tr></thead>
+        <tbody>
+          <tr><td><b>Business rules (DB triggers)</b></td><td><span class="chip c-pass">8/8</span></td><td class="desc">job_code, VAT 7%, มัดจำ→Production+Finance, READY→Installation, notes→Issue, รับประกัน+12เดือน, จบงาน→ปิด</td></tr>
+          <tr><td><b>Security (ไม่ล็อกอิน)</b></td><td><span class="chip c-pass">5/5</span></td><td class="desc">หน้า login เปิดได้, BFF ตอบ 401, middleware redirect, รหัสผิดถูกปฏิเสธ</td></tr>
+          <tr><td><b>Authenticated stack</b></td><td><span class="chip c-pass">PASS</span></td><td class="desc">ล็อกอินจริง → Dashboard + งานจริง, สร้างงาน/มัดจำผ่านแอปได้</td></tr>
+          <tr><td><b>Flow ใบเสนอราคา (P0#1)</b></td><td><span class="chip c-pass">4/4</span></td><td class="desc">กรอกยอด→VAT auto→ส่งลูกค้า→รอตัดสินใจ→มัดจำ ครบวงจร</td></tr>
+          <tr><td><b>P0 ใหม่ + integrity guards</b></td><td><span class="chip c-pass">6/6</span></td><td class="desc">แจ้ง issue เอง, เงินค้างรับ, กันมัดจำซ้ำ (409), กันย้อนสถานะ (409), date ว่าง→422</td></tr>
+          <tr><td><b>RBAC (ผู้ใช้ role PRODUCTION จริง)</b></td><td><span class="chip c-pass">4/4</span></td><td class="desc">ช่างเห็นงานแต่ยอดเงินถูกซ่อน, เขียน finance/ดูค้างรับไม่ได้ (403), แจ้ง issue ได้</td></tr>
+        </tbody>
+      </table>
+      <p class="muted" style="margin-top:12px">รวม <b>31/31 ผ่าน</b> · ข้อมูลทดสอบถูกลบทิ้งหลังเทสทุกครั้ง ไม่เหลือขยะในระบบ</p>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="dot" style="background:var(--pass)"></span>P0 ที่แก้แล้ว (จาก QA + live)</h2>
+    <div class="card">
+      <table>
+        <thead><tr><th>รายการ</th><th style="width:90px">สถานะ</th><th>รายละเอียด</th></tr></thead>
+        <tbody>
+          <tr><td>🔴 trigger โดน RLS บล็อก</td><td><span class="chip c-pass">แก้แล้ว</span></td><td class="desc">เจอจาก live test — ผู้ใช้สร้างงานไม่ได้เลย! แก้ trigger เป็น SECURITY DEFINER (0004)</td></tr>
+          <tr><td>P0#1 ฟอร์มทำใบเสนอราคา</td><td><span class="chip c-pass">เสร็จ</span></td><td class="desc">งานไม่ติด "รอเสนอราคา" อีก กรอกยอด+เลื่อนสถานะได้</td></tr>
+          <tr><td>P0#2 บอร์ดกดเปลี่ยนสถานะ</td><td><span class="chip c-pass">เสร็จ</span></td><td class="desc">การ์ด Production/ติดตั้งกดเปิด drawer ได้ + เพิ่มคอลัมน์ที่หาย (งานไม่หายจากบอร์ด)</td></tr>
+          <tr><td>P0#3 แจ้ง issue เอง</td><td><span class="chip c-pass">เสร็จ</span></td><td class="desc">POST /api/issues + ปุ่ม "แจ้งปัญหาใหม่"</td></tr>
+          <tr><td>P0#4 เงินค้างรับรายลูกค้า</td><td><span class="chip c-pass">เสร็จ</span></td><td class="desc">แท็บ "ค้างรับ" + ปุ่มรับเงินตรงนั้น</td></tr>
+          <tr><td>RBAC BFF↔RLS ไม่ตรง</td><td><span class="chip c-pass">แก้แล้ว</span></td><td class="desc">align SALES (เขียน issue, อ่าน finance)</td></tr>
+          <tr><td>มัดจำซ้ำ / ย้อนสถานะ / date ว่าง</td><td><span class="chip c-pass">แก้แล้ว</span></td><td class="desc">เพิ่ม guard ครบ ยืนยันด้วย live test</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="dot" style="background:var(--mut)"></span>ยกไป Phase 2 (P1 — ไม่บล็อกการใช้งาน)</h2>
+    <div class="card">
+      <table>
+        <tbody>
+          <tr><td><span class="chip c-defer">P1</span></td><td class="desc">Toast แจ้ง "บันทึกสำเร็จ" ทุก action</td></tr>
+          <tr><td><span class="chip c-defer">P1</span></td><td class="desc">Export Excel จริง (ตอนนี้เป็นปุ่ม placeholder)</td></tr>
+          <tr><td><span class="chip c-defer">P1</span></td><td class="desc">Dashboard การ์ดกด deep-link ไปหน้าที่ filter</td></tr>
+          <tr><td><span class="chip c-defer">P1</span></td><td class="desc">เลือกช่างประเมินตอนสร้างงาน, แจ้งเตือน (กระดิ่ง) จริง</td></tr>
+          <tr><td><span class="chip c-defer">P2</span></td><td class="desc">Inventory/BOM, ใบกำกับภาษี, customer portal (ตาม PRD non-goals v1)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="foot">
+    ทดสอบโดยทีม multi-agent (System Analyst×User Rep + QA testers) แล้วยืนยันด้วย live test บน production จริง (Supabase REST + forged session cookie เข้า BFF บน Vercel) · โค้ดทั้งหมดบน <code>github.com/jraluminium102/JRerp</code> · งานต้นฉบับของแต่ละ agent ใน <code>docs/</code>
+  </div>
+</div></body></html>
