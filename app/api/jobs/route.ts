@@ -3,6 +3,7 @@ import { requirePermission } from "@/lib/bff/context";
 import { withRoute, audit } from "@/lib/bff/handler";
 import { ok, created } from "@/lib/bff/response";
 import { can } from "@/lib/rbac";
+import { toArray } from "@/lib/bff/normalize";
 
 const FINANCE_COLS = ["net_amount", "vat_amount", "total_amount", "deposit_amount", "discount_amount"];
 
@@ -46,6 +47,10 @@ export const GET = withRoute(async (req: Request) => {
     const issues = (j.issues as { status: string }[] | null) ?? [];
     const openIssues = issues.filter((i) => i.status !== "CLOSED").length;
     const out: Record<string, unknown> = { ...j, open_issues: openIssues, issues: undefined };
+    // productions/installations เป็นความสัมพันธ์ 1:1 → PostgREST คืน object เดี่ยว
+    // normalize เป็น array เสมอ เพื่อให้ frontend (board) อ่าน .length / [0] ได้
+    out.productions = toArray(j.productions);
+    out.installations = toArray(j.installations);
     if (!showFinance) FINANCE_COLS.forEach((c) => delete out[c]);
     return out;
   });

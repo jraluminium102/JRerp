@@ -3,6 +3,7 @@ import { requirePermission } from "@/lib/bff/context";
 import { withRoute, audit } from "@/lib/bff/handler";
 import { ok, notFound, err } from "@/lib/bff/response";
 import { can } from "@/lib/rbac";
+import { toArray } from "@/lib/bff/normalize";
 
 const FINANCE_COLS = ["net_amount", "vat_amount", "total_amount", "deposit_amount", "discount_amount"];
 type Params = { params: { id: string } };
@@ -19,6 +20,9 @@ export const GET = withRoute(async (_req: Request, { params }: Params) => {
 
   const showFinance = can(ctx.role, "jobs:finance_fields", "read");
   const out: Record<string, unknown> = { ...(data as Record<string, unknown>) };
+  // 1:1 embeds → object เดี่ยว, normalize เป็น array ให้ตรงกับที่ frontend คาดหวัง
+  out.productions = toArray(out.productions);
+  out.installations = toArray(out.installations);
   if (!showFinance) {
     FINANCE_COLS.forEach((c) => delete out[c]);
     delete out.finance_entries;
