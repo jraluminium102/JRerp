@@ -12,6 +12,7 @@ type Dash = {
   monthlyRevenue: { month: string; quoted: number; closed: number }[];
   openIssues: number; closedIssues: number;
   overdueJobs: { jobCode: string; customerName: string; days: number }[];
+  overdueTotal: number;
 };
 
 export default function DashboardPage() {
@@ -76,7 +77,7 @@ export default function DashboardPage() {
         <div className="glass-card rounded-2xl p-5">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2 text-white font-semibold"><span className="text-amber-300"><Clock size={18} /></span> งานค้างเกิน 7 วัน</div>
-            <span className="text-amber-200 text-[12px] font-semibold tnum">{data.overdueJobs.length} งาน</span>
+            <span className="text-amber-200 text-[12px] font-semibold tnum">{data.overdueTotal} งาน</span>
           </div>
           <div className="space-y-2">
             {data.overdueJobs.length === 0 && <div className="text-[12px]" style={{ color: "var(--t-low)" }}>ไม่มีงานค้าง 🎉</div>}

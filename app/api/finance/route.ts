@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { requirePermission } from "@/lib/bff/context";
 import { withRoute } from "@/lib/bff/handler";
-import { ok, created } from "@/lib/bff/response";
+import { ok, created, err } from "@/lib/bff/response";
 import { can } from "@/lib/rbac";
 
 // GET /api/finance — list (filter job, date range)
@@ -31,7 +31,7 @@ export const GET = withRoute(async (req: Request) => {
 
 const schema = z.object({
   job_id: z.string().uuid(),
-  payment_date: z.string(),
+  payment_date: z.string().min(1, "กรุณาระบุวันที่รับเงิน"),
   amount: z.number().positive(),
   type: z.enum(["DEPOSIT", "INSTALLMENT_2", "INSTALLMENT_3", "FINAL"]),
   channel: z.enum(["TRANSFER", "CASH", "CHEQUE"]),
@@ -42,6 +42,18 @@ const schema = z.object({
 export const POST = withRoute(async (req: Request) => {
   const ctx = await requirePermission("finance", "write");
   const body = schema.parse(await req.json());
+
+  // กันมัดจำซ้ำ: มัดจำถูกสร้างอัตโนมัติตอนงาน DEPOSITED แล้ว
+  if (body.type === "DEPOSIT") {
+    const { count } = await ctx.supabase
+      .from("finance_entries")
+      .select("id", { count: "exact", head: true })
+      .eq("job_id", body.job_id)
+      .eq("type", "DEPOSIT")
+      .eq("is_voided", false);
+    if ((count ?? 0) > 0) return err("งานนี้มีรายการมัดจำอยู่แล้ว (ระบบสร้างอัตโนมัติตอนมัดจำ)", 409);
+  }
+
   const { data, error } = await ctx.supabase
     .from("finance_entries")
     .insert({ ...body, is_auto_created: false })

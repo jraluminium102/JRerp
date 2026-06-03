@@ -58,7 +58,7 @@ const createSchema = z.object({
   customer_tel: z.string().optional(),
   customer_area: z.string().optional(),
   channel: z.enum(["LINE", "FACEBOOK", "INSTAGRAM", "OTHER"]),
-  assess_date: z.string(),
+  assess_date: z.string().min(1, "กรุณาระบุวันเข้าประเมิน"),
   estimator_id: z.string().uuid().optional(),
 });
 

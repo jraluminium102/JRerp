@@ -15,7 +15,7 @@ const MATRIX: Record<Role, Partial<Record<Resource, Action[]>>> = {
   },
   SALES: {
     jobs: ["read", "write"], "jobs:finance_fields": ["read", "write"],
-    production: ["read"], issues: ["read"], dashboard: ["read"],
+    production: ["read"], issues: ["read", "write"], finance: ["read"], dashboard: ["read"],
   },
   DESIGNER: {
     jobs: ["read", "write"], production: ["read"], issues: ["read"], dashboard: ["read"],

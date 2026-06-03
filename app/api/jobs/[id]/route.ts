@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { requirePermission } from "@/lib/bff/context";
 import { withRoute, audit } from "@/lib/bff/handler";
-import { ok, notFound } from "@/lib/bff/response";
+import { ok, notFound, err } from "@/lib/bff/response";
 import { can } from "@/lib/rbac";
 
 const FINANCE_COLS = ["net_amount", "vat_amount", "total_amount", "deposit_amount", "discount_amount"];
@@ -35,7 +35,7 @@ const statusSchema = z.discriminatedUnion("status", [
   z.object({
     status: z.literal("DEPOSITED"),
     deposit_amount: z.number().positive("ระบุยอดมัดจำ"),
-    deposit_date: z.string(),
+    deposit_date: z.string().min(1, "ระบุวันมัดจำ"),
   }),
   z.object({
     status: z.literal("CANCELLED"),
@@ -63,6 +63,15 @@ export const PATCH = withRoute(async (req: Request, { params }: Params) => {
 
   if ("status" in body) {
     const payload = statusSchema.parse(body);
+
+    // กันย้อนสถานะหลังมัดจำ → กัน ghost Production/Finance record
+    const { data: current } = await ctx.supabase
+      .from("jobs").select("status").eq("id", params.id).single();
+    const PRE_DEPOSIT = ["PENDING_QUOTE", "QUOTE_SENT", "PENDING_DECISION"];
+    if (current && ["DEPOSITED", "COMPLETED"].includes(current.status) && PRE_DEPOSIT.includes(payload.status)) {
+      return err("ย้อนสถานะกลับก่อนมัดจำไม่ได้ (งานมี Production/บัญชีผูกอยู่แล้ว)", 409);
+    }
+
     const { data, error } = await ctx.supabase
       .from("jobs").update(payload as Record<string, unknown>).eq("id", params.id).select().single();
     if (error || !data) throw new Error(error?.message ?? "Update failed");

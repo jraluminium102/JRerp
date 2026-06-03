@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { NavIcons, X, LogOut, Bell, Menu } from "@/components/ui/icons";
+import { NavIcons, X, LogOut, Menu } from "@/components/ui/icons";
 import { MENU_LABEL } from "@/lib/constants";
 import type { Role } from "@/lib/database.types";
 import { cn } from "@/lib/format";
@@ -87,9 +87,6 @@ export function Shell({ menus, role, userName, avatarUrl, children }: {
             <div className="text-[12px] truncate" style={{ color: "var(--t-low)" }}>บทบาท: <span className="text-white/85 font-medium">{role}</span></div>
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2">
-            <button aria-label="การแจ้งเตือน" className="focusable pressable relative w-11 h-11 inline-flex items-center justify-center rounded-xl text-white/75 hover:bg-white/10">
-              <Bell size={20} /><span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-rose-400 ring-2 ring-[#12283f]" />
-            </button>
             <div className="flex items-center gap-2 pl-1">
               {avatarUrl
                 ? <img src={avatarUrl} alt="" className="w-9 h-9 rounded-full object-cover" />

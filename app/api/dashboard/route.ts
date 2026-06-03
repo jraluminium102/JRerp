@@ -43,20 +43,21 @@ export const GET = withRoute(async () => {
 
   // overdue: production ไม่อัพเดท > 7 วัน (ไม่ READY/COMPLETED/CANCELLED)
   const sevenAgo = new Date(now.getTime() - 7 * 864e5);
-  const overdueJobs = P.filter((p: any) => {
+  const overdueAll = P.filter((p: any) => {
     const last = p.status_updated_at ? new Date(p.status_updated_at) : new Date(p.created_at);
     const jobStatus = p.job?.status;
     return p.status !== "READY" && !["COMPLETED", "CANCELLED"].includes(jobStatus) && last < sevenAgo;
   }).map((p: any) => {
     const last = p.status_updated_at ? new Date(p.status_updated_at) : new Date(p.created_at);
     return { jobCode: p.job?.job_code, customerName: p.job?.customer_name, days: Math.floor((now.getTime() - last.getTime()) / 864e5) };
-  }).slice(0, 10);
+  }).sort((a: any, b: any) => b.days - a.days);
 
   return ok({
     jobsByStatus, totalClosed, collected, outstanding: totalClosed - collected, closeRate,
     monthlyRevenue,
     openIssues: I.filter((i: any) => i.status !== "CLOSED").length,
     closedIssues: I.filter((i: any) => i.status === "CLOSED").length,
-    overdueJobs,
+    overdueJobs: overdueAll.slice(0, 10),
+    overdueTotal: overdueAll.length,
   });
 });

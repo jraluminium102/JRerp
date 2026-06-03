@@ -3,8 +3,9 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Tag, Spinner, EmptyState } from "@/components/ui/primitives";
-import { ChevronRight } from "@/components/ui/icons";
+import { ChevronRight, Plus } from "@/components/ui/icons";
 import { IssueDrawer, type IssueRow } from "@/components/issues/IssueDrawer";
+import { CreateIssueModal } from "@/components/issues/CreateIssueModal";
 import type { IssueStatus } from "@/lib/database.types";
 
 const PHASE_TH: Record<string, string> = { SALES: "ขาย", MEASUREMENT: "วัดจริง", PRODUCTION: "ผลิต", INSTALLATION: "ติดตั้ง", POST_SALE: "หลังขาย" };
@@ -20,6 +21,7 @@ const FILTERS: { v: string; th: string }[] = [
 export default function IssuesPage() {
   const [filter, setFilter] = useState("ALL");
   const [open, setOpen] = useState<IssueRow | null>(null);
+  const [creating, setCreating] = useState(false);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["issues", filter],
@@ -30,8 +32,17 @@ export default function IssuesPage() {
 
   return (
     <div className="p-4 sm:p-6 fade-in">
-      <h1 className="text-xl sm:text-2xl font-bold text-white">Issues</h1>
-      <p className="text-sm mb-4" style={{ color: "var(--t-low)" }}>ปัญหาทุก phase · auto-sync จาก Production / ติดตั้ง</p>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Issues</h1>
+          <p className="text-sm mb-4" style={{ color: "var(--t-low)" }}>ปัญหาทุก phase · auto-sync จาก Production / ติดตั้ง</p>
+        </div>
+        {canWrite && (
+          <button onClick={() => setCreating(true)} className="focusable pressable flex items-center gap-2 bg-white text-[#1F4E78] rounded-xl px-3.5 sm:px-4 py-2.5 text-sm font-semibold hover:bg-white/90 shadow-lg min-h-[44px] shrink-0">
+            <Plus size={18} /> <span className="hidden xs:inline">แจ้งปัญหาใหม่</span><span className="xs:hidden">แจ้ง</span>
+          </button>
+        )}
+      </div>
 
       {/* Filter chips */}
       <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
@@ -70,6 +81,7 @@ export default function IssuesPage() {
       )}
 
       {open && <IssueDrawer issue={open} canWrite={canWrite} onClose={() => setOpen(null)} onChanged={() => { setOpen(null); refetch(); }} />}
+      {creating && <CreateIssueModal onClose={() => setCreating(false)} onSaved={() => { setCreating(false); refetch(); }} />}
     </div>
   );
 }
