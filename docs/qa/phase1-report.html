@@ -73,9 +73,15 @@
           <tr><td><b>Flow ใบเสนอราคา (P0#1)</b></td><td><span class="chip c-pass">4/4</span></td><td class="desc">กรอกยอด→VAT auto→ส่งลูกค้า→รอตัดสินใจ→มัดจำ ครบวงจร</td></tr>
           <tr><td><b>P0 ใหม่ + integrity guards</b></td><td><span class="chip c-pass">6/6</span></td><td class="desc">แจ้ง issue เอง, เงินค้างรับ, กันมัดจำซ้ำ (409), กันย้อนสถานะ (409), date ว่าง→422</td></tr>
           <tr><td><b>RBAC (ผู้ใช้ role PRODUCTION จริง)</b></td><td><span class="chip c-pass">4/4</span></td><td class="desc">ช่างเห็นงานแต่ยอดเงินถูกซ่อน, เขียน finance/ดูค้างรับไม่ได้ (403), แจ้ง issue ได้</td></tr>
+          <tr><td><b>Stage connectivity (ไล่ทุก stage)</b></td><td><span class="chip c-pass">5/5</span></td><td class="desc">มัดจำ→โผล่บอร์ด Production, ทั้ง 10 สถานะ production แสดงครบ, READY→บอร์ดติดตั้ง, จบงาน→ปิด+รับประกัน</td></tr>
+          <tr><td><b>หน้าเว็บ render</b></td><td><span class="chip c-pass">7/7</span></td><td class="desc">ทุกหน้าโหลด 200 หลัง deploy</td></tr>
         </tbody>
       </table>
-      <p class="muted" style="margin-top:12px">รวม <b>31/31 ผ่าน</b> · ข้อมูลทดสอบถูกลบทิ้งหลังเทสทุกครั้ง ไม่เหลือขยะในระบบ</p>
+      <p class="muted" style="margin-top:12px">รวม <b>43/43 ผ่าน</b> · ข้อมูลทดสอบถูกลบทิ้งหลังเทสทุกครั้ง ไม่เหลือขยะในระบบ</p>
+      <div style="margin-top:12px;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:14px">
+        <b style="color:#b91c1c">🔍 บั๊กสำคัญที่ live test จับได้ (แก้แล้ว):</b>
+        <div class="desc" style="margin-top:6px">มัดจำแล้วงาน <b>ไม่โผล่บนบอร์ด Production/ติดตั้ง</b> — เพราะ PostgREST คืน production/installation (ความสัมพันธ์ 1:1) เป็น object เดี่ยว แต่หน้าจออ่านเป็น array (<code>.length</code>) งานเลยถูก filter ทิ้ง <b>ข้อมูลเชื่อมต่อถูกต้องที่ DB</b> แค่ frontend อ่านรูปทรงผิด → แก้ที่ BFF normalize เป็น array (commit <code>6775437</code>) ยืนยันด้วย live test ไล่ทุก stage แล้วครบ</div>
+      </div>
     </div>
   </section>
 
