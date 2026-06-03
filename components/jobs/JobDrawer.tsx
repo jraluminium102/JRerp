@@ -2,8 +2,9 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api, ApiError } from "@/lib/api";
-import { PROD_STATUS, INST_STATUS } from "@/lib/constants";
+import { PROD_STATUS, INST_STATUS, JOB_STATUS } from "@/lib/constants";
 import { baht, thDate } from "@/lib/format";
+import { calcFinancials } from "@/lib/finance";
 import { Chip, Tag, Spinner } from "@/components/ui/primitives";
 import { X, ShieldCheck } from "@/components/ui/icons";
 import type { Job, Production, Installation, FinanceEntry, Issue } from "@/lib/database.types";
@@ -76,6 +77,11 @@ export function JobDrawer({ jobId, canFinance, onClose, onChanged }: { jobId: st
                       <button onClick={() => setDepOpen(true)} className="focusable pressable text-[12px] bg-emerald-500/25 border border-emerald-300/30 text-emerald-100 rounded-lg px-3 py-1.5 min-h-[36px]">บันทึกมัดจำ</button>
                     ) : null}
                   </div>
+
+                  {canFinance && ["PENDING_QUOTE", "QUOTE_SENT", "PENDING_DECISION"].includes(job.status) && (
+                    <QuoteEditor job={job} onChanged={() => { refetch(); onChanged(); }} />
+                  )}
+
                   <div className="mt-3">
                     <Row l="ช่องทาง" v={job.channel} />
                     <Row l="เบอร์โทร" v={job.customer_tel} num />
@@ -190,6 +196,81 @@ function DepositForm({ jobId, onDone, onCancel }: { jobId: string; onDone: () =>
         <button onClick={onCancel} className="focusable pressable flex-1 glass-card text-white rounded-lg px-3 py-2 text-sm min-h-[40px]">ยกเลิก</button>
         <button onClick={save} disabled={saving || !amount} className="focusable pressable flex-1 bg-emerald-500/90 hover:bg-emerald-500 text-white rounded-lg px-3 py-2 text-sm font-semibold disabled:opacity-50 min-h-[40px]">ยืนยันมัดจำ</button>
       </div>
+    </div>
+  );
+}
+
+// ── P0 #1: ฟอร์มทำใบเสนอราคา ──
+function QuoteEditor({ job, onChanged }: { job: Detail; onChanged: () => void }) {
+  const [net, setNet] = useState(job.net_amount ? String(job.net_amount) : "");
+  const [saving, setSaving] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const n = Number(net) || 0;
+  const f = calcFinancials(n, 0); // net = ยอดก่อน VAT (หลังหักส่วนลดแล้ว) ตาม OQ-04
+  const dirty = n > 0 && n !== Number(job.net_amount ?? 0);
+
+  const saveQuote = async () => {
+    setErr(null); setSaving(true);
+    try { await api.patch(`/jobs/${job.id}`, { net_amount: n }); onChanged(); }
+    catch (e) { setErr(e instanceof ApiError ? e.message : "บันทึกไม่สำเร็จ"); }
+    finally { setSaving(false); }
+  };
+
+  const setStatus = async (s: string) => {
+    setErr(null); setBusy(true);
+    try {
+      if (s === "QUOTE_SENT" && !job.quote_sent_date) {
+        await api.patch(`/jobs/${job.id}`, { quote_sent_date: new Date().toISOString().slice(0, 10) });
+      }
+      await api.patch(`/jobs/${job.id}`, { status: s });
+      onChanged();
+    } catch (e) { setErr(e instanceof ApiError ? e.message : "เปลี่ยนสถานะไม่สำเร็จ"); }
+    finally { setBusy(false); }
+  };
+
+  const STAGES = ["PENDING_QUOTE", "QUOTE_SENT", "PENDING_DECISION"] as const;
+
+  return (
+    <div className="mt-4 glass-card rounded-xl p-4">
+      <div className="text-sm font-semibold text-white mb-3">ทำใบเสนอราคา</div>
+
+      <label className="text-[12px] block mb-1.5" style={{ color: "var(--t-low)" }}>ยอดงานก่อน VAT (บาท) <span className="text-rose-300">*</span></label>
+      <div className="flex gap-2">
+        <input inputMode="numeric" value={net} onChange={(e) => setNet(e.target.value)} placeholder="0"
+          className="focusable flex-1 glass-card rounded-lg px-3 py-2.5 text-sm text-white outline-none tnum min-h-[44px] placeholder-white/40" />
+        <button onClick={saveQuote} disabled={saving || !dirty}
+          className="focusable pressable bg-white text-[#1F4E78] rounded-lg px-4 text-sm font-semibold disabled:opacity-50 min-h-[44px] flex items-center gap-2">
+          {saving && <span className="w-4 h-4 rounded-full border-2 border-gray-300 border-t-gray-600 animate-spin" />}บันทึกยอด
+        </button>
+      </div>
+
+      {/* preview VAT/รวม สด */}
+      <div className="grid grid-cols-3 gap-2 mt-3">
+        {[["ก่อน VAT", baht(n)], ["VAT 7%", baht(f.vatAmount)], ["ยอดรวม", baht(f.totalAmount)]].map(([l, v]) => (
+          <div key={l} className="bg-white/8 border border-white/10 rounded-lg p-2 text-center">
+            <div className="text-[10px]" style={{ color: "var(--t-low)" }}>{l}</div>
+            <div className="text-white font-semibold text-[13px] mt-0.5 tnum">{v}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* เลื่อนสถานะใบเสนอ */}
+      <div className="mt-3.5">
+        <div className="text-[12px] mb-1.5" style={{ color: "var(--t-low)" }}>สถานะใบเสนอราคา</div>
+        <div className="flex gap-1.5" role="radiogroup" aria-label="สถานะใบเสนอราคา">
+          {STAGES.map((s) => (
+            <button key={s} role="radio" aria-checked={job.status === s} disabled={busy || job.status === s} onClick={() => setStatus(s)}
+              className={`focusable pressable flex-1 rounded-lg px-2 py-2 text-[12px] font-medium border min-h-[40px] transition disabled:opacity-100 ${job.status === s ? "bg-white text-[#1F4E78] border-white" : "bg-white/8 text-white/70 border-white/12 hover:bg-white/15"}`}>
+              {JOB_STATUS[s].th}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {err && <p role="alert" className="mt-2.5 text-[12px] text-rose-200 bg-rose-500/15 border border-rose-300/25 rounded-lg px-3 py-2">{err}</p>}
+      <p className="mt-2.5 text-[11px]" style={{ color: "var(--t-low)" }}>กรอกยอด → บันทึก → กด “ส่งลูกค้าแล้ว” → จากนั้นปุ่ม “บันทึกมัดจำ” จะใช้งานได้</p>
     </div>
   );
 }
