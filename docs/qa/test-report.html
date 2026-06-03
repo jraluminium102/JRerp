@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>JR OMS — รายงานผลการทดสอบ (Multi-Agent QA)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#1F4E78; --deep:#163a5c; --ink:#0f172a; --mut:#64748b; --line:#e2e8f0;
+    --bg:#f1f5f9; --card:#ffffff;
+    --pass:#10b981; --warn:#f59e0b; --fail:#ef4444; --info:#3b82f6;
+    --p0:#dc2626; --p1:#f59e0b; --p2:#64748b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter','Noto Sans Thai',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 20px 80px}
+  .tnum{font-variant-numeric:tabular-nums}
+
+  /* header */
+  .hero{background:linear-gradient(135deg,#0c1f37,#1e3a5f 55%,#16324d);color:#fff;border-radius:24px;padding:36px;position:relative;overflow:hidden}
+  .hero::after{content:"";position:absolute;right:-60px;top:-60px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(56,189,248,.35),transparent 70%)}
+  .hero h1{font-size:26px;font-weight:700;letter-spacing:-.2px}
+  .hero .sub{color:#bcd3ea;font-size:14px;margin-top:6px}
+  .badge-verdict{display:inline-flex;align-items:center;gap:8px;margin-top:18px;padding:10px 18px;border-radius:999px;font-weight:600;font-size:15px}
+  .v-cond{background:rgba(245,158,11,.18);color:#fde68a;border:1px solid rgba(245,158,11,.4)}
+  .hero .meta{display:flex;gap:24px;flex-wrap:wrap;margin-top:20px;font-size:13px;color:#9fc0dd}
+  .hero .meta b{color:#fff}
+
+  /* section */
+  section{margin-top:28px}
+  h2{font-size:19px;font-weight:700;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:9px}
+  h2 .dot{width:9px;height:9px;border-radius:50%;background:var(--navy)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 1px 3px rgba(15,23,42,.04)}
+
+  /* score grid */
+  .scores{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+  .score{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px}
+  .score .nm{font-size:13px;color:var(--mut);font-weight:500}
+  .score .pct{font-size:26px;font-weight:700;margin-top:4px}
+  .bar{height:7px;border-radius:99px;background:#eef2f6;margin-top:10px;overflow:hidden}
+  .bar > i{display:block;height:100%;border-radius:99px}
+  .score .frac{font-size:12px;color:var(--mut);margin-top:7px}
+
+  /* overall stat row */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:6px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;text-align:center}
+  .stat .v{font-size:28px;font-weight:700}
+  .stat .l{font-size:12px;color:var(--mut);margin-top:2px}
+
+  /* chips */
+  .chip{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:7px;font-size:12px;font-weight:600;white-space:nowrap}
+  .c-pass{background:#dcfce7;color:#15803d}
+  .c-warn{background:#fef3c7;color:#b45309}
+  .c-fail{background:#fee2e2;color:#b91c1c}
+  .c-high{background:#fee2e2;color:#b91c1c}
+  .c-med{background:#ffedd5;color:#c2410c}
+  .c-low{background:#e2e8f0;color:#475569}
+  .c-p0{background:#fee2e2;color:#b91c1c}
+  .c-p1{background:#fef3c7;color:#b45309}
+  .c-p2{background:#e2e8f0;color:#475569}
+
+  /* tables */
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{text-align:left;color:var(--mut);font-weight:600;font-size:12px;padding:9px 10px;border-bottom:2px solid var(--line)}
+  td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  code{background:#f1f5f9;padding:1px 6px;border-radius:5px;font-size:12px;color:#334155;font-family:ui-monospace,Menlo,monospace}
+  .desc{color:#334155}
+
+  /* callout */
+  .callout{border-radius:14px;padding:16px 18px;border:1px solid;margin-top:12px}
+  .co-blocker{background:#fef2f2;border-color:#fecaca}
+  .co-good{background:#f0fdf4;border-color:#bbf7d0}
+  .callout h3{font-size:14px;margin-bottom:6px}
+  .callout ul{margin-left:18px;font-size:13.5px;color:#334155}
+  .callout li{margin:4px 0}
+
+  .muted{color:var(--mut);font-size:13px}
+  .foot{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);font-size:12.5px;color:var(--mut)}
+  .agents{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .agents span{background:#fff;border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-size:12px}
+  @media print{body{background:#fff}.hero::after{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HERO -->
+  <div class="hero">
+    <h1>รายงานผลการทดสอบ — JR OMS</h1>
+    <div class="sub">Multi-Agent QA · ทดสอบทั้ง flow โดยทีม agent 6 ตัว (System Analyst×User Rep + Tester 5) · วิธี: code analysis เทียบ business rules / RBAC / acceptance criteria</div>
+    <div class="badge-verdict v-cond">⚠ ผ่านระดับสถาปัตยกรรม &amp; ตรรกะ — แต่ยังใช้งานจริงเต็มรูปแบบไม่ได้ (ต้องแก้ P0 ก่อน)</div>
+    <div class="meta">
+      <div>โปรเจกต์ <b>JR Aluminium and Glass</b></div>
+      <div>วันที่ <b>3 มิ.ย. 2026</b></div>
+      <div>Flow ที่ทดสอบ <b>5 flow</b></div>
+      <div>เช็คทั้งหมด <b>~78 ข้อ</b></div>
+    </div>
+  </div>
+
+  <!-- OVERALL -->
+  <section>
+    <div class="stats">
+      <div class="stat"><div class="v" style="color:var(--pass)">~83%</div><div class="l">ผ่านโดยรวม</div></div>
+      <div class="stat"><div class="v tnum">65/78</div><div class="l">เช็คที่ผ่าน</div></div>
+      <div class="stat"><div class="v tnum" style="color:var(--fail)">3</div><div class="l">บั๊ก High / FAIL</div></div>
+      <div class="stat"><div class="v tnum" style="color:var(--warn)">9</div><div class="l">บั๊ก Medium</div></div>
+      <div class="stat"><div class="v tnum" style="color:var(--p0)">4</div><div class="l">UX blocker (P0)</div></div>
+    </div>
+  </section>
+
+  <!-- VERDICT -->
+  <section>
+    <h2><span class="dot"></span>สรุปคำตัดสิน: ใช้งานจริงได้ไหม?</h2>
+    <div class="card">
+      <div class="callout co-good">
+        <h3>✅ สิ่งที่แข็งแรงแล้ว (ผ่าน)</h3>
+        <ul>
+          <li><b>Business rules ใน DB triggers ถูกต้องครบ</b> — job_code ต่อเลข, VAT 7%, มัดจำ→สร้าง Production+Finance อัตโนมัติ (idempotent ไม่ซ้ำ), READY→Installation, รับประกัน +12 เดือน, ปัญหา→Issues (dedupe)</li>
+          <li><b>ความปลอดภัยเงิน</b> — void แทนลบ (บังคับเหตุผล), ไม่มี endpoint ลบจริง, ปุ่มถูก gate ด้วยสิทธิ์</li>
+          <li><b>RBAC 2 ชั้น</b> — BFF <code>requirePermission</code> + RLS ทำงาน, mask ฟิลด์เงินตาม role, เมนูแสดงตามสิทธิ์</li>
+          <li><b>Auth</b> — กันเส้นทาง, /api ตอบ 401, ปิดผู้ใช้ inactive ได้</li>
+        </ul>
+      </div>
+      <div class="callout co-blocker">
+        <h3>⛔ ทำไมยัง "ใช้จริงเต็มรูปแบบ" ไม่ได้ — 4 P0 Blocker (จาก System Analyst × คุณนัท)</h3>
+        <ul>
+          <li><b>กรอกใบเสนอราคาไม่ได้</b> — งานทุกชิ้นค้างที่ "รอเสนอราคา" ถาวร ไม่มี UI กรอกยอด/เปลี่ยนเป็น "ส่งลูกค้าแล้ว" (ทั้งที่ API รองรับ) → core Sales flow เดินไม่ได้</li>
+          <li><b>อัปเดตสถานะจากหน้า Production/Installation ไม่ได้</b> — การ์ด kanban กดไม่ได้ ช่างหน้างานต้องอ้อมผ่าน Jobs 6 สเต็ป → คนหน้างานจะเลิกใช้</li>
+          <li><b>แจ้ง Issue ใหม่เองไม่ได้</b> — มีแต่ที่ระบบ sync มาเอง (ไม่มี POST /api/issues) → เคสลูกค้าโทรบ่นแจ้งไม่ได้</li>
+          <li><b>ตามเงินค้างรับเป็นรายลูกค้าไม่ได้</b> — เห็นแต่ยอดรวม ไม่มีรายชื่อลูกหนี้</li>
+        </ul>
+      </div>
+      <p class="muted" style="margin-top:12px"><b>สรุป:</b> แกนระบบ (สถาปัตยกรรม BFF + DB triggers + ความปลอดภัย) พร้อมและเชื่อถือได้ แต่ยัง <b>ขาด UI บางส่วนของ flow ใช้งานจริง</b> ถ้าแก้ 4 P0 + บั๊ก High/Med ด้านล่าง ก็พร้อมใช้งานจริงได้</p>
+    </div>
+  </section>
+
+  <!-- PER-FLOW SCORES -->
+  <section>
+    <h2><span class="dot"></span>คะแนนแต่ละ Flow</h2>
+    <div class="scores">
+      <div class="score"><div class="nm">Auth &amp; RBAC</div><div class="pct" style="color:var(--warn)">86%</div><div class="bar"><i style="width:86%;background:var(--warn)"></i></div><div class="frac tnum">12 / 14 ผ่าน · 1 FAIL · 1 WARN</div></div>
+      <div class="score"><div class="nm">Sales / Jobs</div><div class="pct" style="color:var(--warn)">86%</div><div class="bar"><i style="width:86%;background:var(--warn)"></i></div><div class="frac tnum">12 / 14 ผ่าน · 2 WARN</div></div>
+      <div class="score"><div class="nm">Production / Installation</div><div class="pct" style="color:var(--warn)">81%</div><div class="bar"><i style="width:81%;background:var(--warn)"></i></div><div class="frac tnum">13 / 16 ผ่าน · 2 บั๊ก Med</div></div>
+      <div class="score"><div class="nm">Finance</div><div class="pct" style="color:var(--warn)">86%</div><div class="bar"><i style="width:86%;background:var(--warn)"></i></div><div class="frac tnum">12 / 14 ผ่าน · 1 High</div></div>
+      <div class="score"><div class="nm">Issues / Dashboard</div><div class="pct" style="color:var(--pass)">80%</div><div class="bar"><i style="width:80%;background:var(--pass)"></i></div><div class="frac tnum">16 / 20 ผ่าน · 2 FAIL</div></div>
+    </div>
+  </section>
+
+  <!-- CRITICAL -->
+  <section>
+    <h2><span class="dot" style="background:var(--fail)"></span>ประเด็นสำคัญ — แก้ก่อน (High / FAIL)</h2>
+    <div class="card">
+      <table>
+        <thead><tr><th>เรื่อง</th><th style="width:90px">ระดับ</th><th>ตำแหน่ง</th><th>อธิบาย / วิธีแก้</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><b>RBAC ไม่ตรงกัน BFF ↔ DB</b></td>
+            <td><span class="chip c-fail">High</span></td>
+            <td><code>lib/rbac.ts</code> vs <code>0003_rls.sql</code></td>
+            <td class="desc">RLS เปิดให้ <b>SALES</b> เขียน Issues + อ่าน Finance แต่ matrix ใน BFF ไม่ให้ → ทั้ง 2 ชั้นขัดกัน ลดประสิทธิภาพ defense-in-depth <b>แก้:</b> ตัดสินว่า SALES ควรได้สิทธิ์ไหม แล้วแก้ให้ตรงกันทั้ง 2 ไฟล์</td>
+          </tr>
+          <tr>
+            <td><b>เพิ่มรายการมัดจำซ้ำได้</b></td>
+            <td><span class="chip c-fail">High</span></td>
+            <td><code>api/finance/route.ts</code></td>
+            <td class="desc">trigger กันมัดจำ auto ซ้ำเฉพาะ <code>is_auto_created=true</code> แต่ user กด "บันทึกรับเงิน" เพิ่มมัดจำ manual ได้อีก → ยอดค้างรับติดลบได้ <b>แก้:</b> เช็คก่อนรับว่ามีมัดจำแล้วหรือไม่ / กันยอดรับเกิน total</td>
+          </tr>
+          <tr>
+            <td><b>Dashboard ยอดรายเดือนเพี้ยน</b></td>
+            <td><span class="chip c-fail">FAIL</span></td>
+            <td><code>api/dashboard/route.ts:37</code></td>
+            <td class="desc">"ค้างรับรายเดือน" = (งานที่มัดจำเดือนนี้) − (เงินที่รับเดือนนี้) ซึ่งคนละแกนเวลา → ค่าติดลบ/ไร้ความหมาย <b>แก้:</b> ใช้ยอดค้างรับระดับงาน ไม่ใช่คิดต่อเดือน</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- BUGS MEDIUM -->
+  <section>
+    <h2><span class="dot" style="background:var(--warn)"></span>บั๊กระดับ Medium (ควรแก้ก่อน go-live)</h2>
+    <div class="card">
+      <table>
+        <thead><tr><th style="width:30%">เรื่อง</th><th style="width:90px">ระดับ</th><th>รายละเอียด</th></tr></thead>
+        <tbody>
+          <tr><td><b>การ์ดงานหายจากบอร์ด Production</b></td><td><span class="chip c-med">Med</span></td><td class="desc"><code>production/page.tsx</code> มีแค่ 6 จาก 10 สถานะ — งานสถานะ <code>PENDING_MEETING / REVISING / PENDING_CONFIRM / ISSUE</code> หายไปจากหน้าจอเลย (ดึงมาแต่ไม่มีคอลัมน์แสดง)</td></tr>
+          <tr><td><b>การ์ดงานหายจากบอร์ดติดตั้ง</b></td><td><span class="chip c-med">Med</span></td><td class="desc"><code>installation/page.tsx</code> ขาดสถานะ <code>REVISING</code> (แก้งาน) และ <code>ISSUE</code> — งานที่ถูกตีกลับมาแก้จะมองไม่เห็น</td></tr>
+          <tr><td><b>วันที่ว่างทำระบบ 500</b></td><td><span class="chip c-med">Med</span></td><td class="desc"><code>assess_date / deposit_date / payment_date</code> ใช้ <code>z.string()</code> ไม่มี <code>.min(1)</code> → ส่งค่าว่างผ่าน validation แล้วไปพังที่ DB เป็น error 500 (ผู้ใช้เห็น "บันทึกไม่สำเร็จ" งง ๆ) <b>แก้:</b> เพิ่ม <code>.min(1)</code> หรือ regex วันที่</td></tr>
+          <tr><td><b>ย้อนสถานะทิ้ง ghost record</b></td><td><span class="chip c-med">Med</span></td><td class="desc">PATCH ย้อน <code>DEPOSITED → PENDING_QUOTE</code> ได้ แต่ Production/Finance ที่ trigger สร้างไว้ไม่ถูกลบ → ข้อมูลค้าง <b>แก้:</b> กันการย้อนสถานะถอยหลังใน BFF</td></tr>
+          <tr><td><b>วันที่รับเงินไม่ตรวจรูปแบบ</b></td><td><span class="chip c-med">Med</span></td><td class="desc"><code>payment_date</code> รับ string อะไรก็ได้ ค่าเพี้ยนถูกเก็บได้</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- UX IMPROVEMENTS -->
+  <section>
+    <h2><span class="dot"></span>ข้อเสนอปรับ UX (System Analyst × ตัวแทนผู้ใช้ "คุณนัท")</h2>
+    <div class="card">
+      <table>
+        <thead><tr><th>หน้าจอ</th><th>ปัญหาเชิงใช้งานจริง</th><th>ข้อเสนอแก้</th><th style="width:60px">สำคัญ</th><th style="width:55px">effort</th></tr></thead>
+        <tbody>
+          <tr><td>JobDrawer (Sales)</td><td class="desc">กรอก/ส่งใบเสนอราคาไม่ได้ งานติด "รอเสนอราคา" ถาวร</td><td class="desc">เพิ่มฟอร์มทำใบเสนอราคา (net, ส่วนลด, designer) → เปลี่ยนเป็น QUOTE_SENT</td><td><span class="chip c-p0">P0</span></td><td>M</td></tr>
+          <tr><td>Production / Installation</td><td class="desc">การ์ด kanban กดไม่ได้ อัปเดตสถานะหน้านี้ไม่ได้ ต้องอ้อม 6 สเต็ป</td><td class="desc">การ์ดเปิด drawer + ปุ่ม "ขั้นถัดไป" แตะครั้งเดียว</td><td><span class="chip c-p0">P0</span></td><td>M</td></tr>
+          <tr><td>Issues</td><td class="desc">แจ้ง issue ใหม่เองไม่ได้ (มีแต่ auto-sync)</td><td class="desc">เพิ่ม POST /api/issues + ปุ่ม "แจ้งปัญหาใหม่"</td><td><span class="chip c-p0">P0</span></td><td>M</td></tr>
+          <tr><td>Finance / Dashboard</td><td class="desc">ตามเงินค้างรับรายลูกค้าไม่ได้ มีแต่ยอดรวม</td><td class="desc">เพิ่มแท็บ "ค้างรับ" list งานที่ total &gt; จ่ายแล้ว + ปุ่มรับเงิน</td><td><span class="chip c-p1">P1</span></td><td>M</td></tr>
+          <tr><td>ทั้งระบบ</td><td class="desc">บันทึกสำเร็จไม่มี feedback ผู้ใช้กดซ้ำ/ไม่มั่นใจ</td><td class="desc">เพิ่ม toast success/error ผูกทุก mutation</td><td><span class="chip c-p1">P1</span></td><td>S–M</td></tr>
+          <tr><td>Header (กระดิ่ง)</td><td class="desc">มีจุดแดงตลอดแต่กดไม่ทำงาน หลอกตา</td><td class="desc">ซ่อนปุ่ม หรือทำ dropdown แจ้งเตือนจริง</td><td><span class="chip c-p1">P1</span></td><td>S</td></tr>
+          <tr><td>Dashboard</td><td class="desc">การ์ด "งานค้าง 7 วัน" / Issues กดเข้าไปต่อไม่ได้</td><td class="desc">ทำ deep-link ไป /jobs, /issues พร้อม filter</td><td><span class="chip c-p1">P1</span></td><td>S</td></tr>
+          <tr><td>CreateJobModal</td><td class="desc">เลือกช่างประเมินตอนสร้างไม่ได้ (schema รองรับ)</td><td class="desc">เพิ่ม dropdown ผู้ประเมิน (optional)</td><td><span class="chip c-p2">P2</span></td><td>S</td></tr>
+          <tr><td>RecordPaymentModal</td><td class="desc">ไม่โชว์ยอดค้างของงานที่เลือก เสี่ยงกรอกเกิน</td><td class="desc">โชว์ยอดค้าง + เดาประเภทงวดถัดไปอัตโนมัติ</td><td><span class="chip c-p2">P2</span></td><td>S–M</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- LOW / NOTES -->
+  <section>
+    <h2><span class="dot" style="background:var(--mut)"></span>ข้อสังเกตเพิ่มเติม (Low / ควรรู้)</h2>
+    <div class="card">
+      <table>
+        <thead><tr><th style="width:34%">เรื่อง</th><th>รายละเอียด</th></tr></thead>
+        <tbody>
+          <tr><td>สมัครสมาชิกเองได้</td><td class="desc">หน้า login มีปุ่มสมัคร — ควรยืนยันว่า user ใหม่ default <code>is_active=false</code> หรือปิดการสมัครเอง ให้ admin เพิ่มคนแทน</td></tr>
+          <tr><td>นับงานค้างเกิน 7 วัน</td><td class="desc">Dashboard ตัดที่ 10 รายการ แต่โชว์ "X งาน" จากตัวที่ตัดแล้ว → ควรส่งจำนวนจริงแยก</td></tr>
+          <tr><td>ปัดเศษเป็นจำนวนเต็มบาท</td><td class="desc"><code>baht()</code> ปัดทิ้งสตางค์ — คลาดเคลื่อนได้ ±1 บาทในรายงาน (กระทบ audit เล็กน้อย)</td></tr>
+          <tr><td>มัดจำ auto ตั้งช่องทาง = โอน</td><td class="desc">ถ้าลูกค้าจ่ายมัดจำเป็นเงินสด/เช็ค รายการ auto จะระบุผิด</td></tr>
+          <tr><td>ปิด issue แล้วลบวิธีแก้ไม่ได้</td><td class="desc"><code>resolution || undefined</code> ทำให้เคลียร์ค่าเดิมไม่ได้ (กรณีเปิด issue ใหม่)</td></tr>
+          <tr><td>dedupe กับ issue ที่ปิดแล้ว</td><td class="desc">ถ้าปัญหาเดิมเกิดซ้ำหลังปิด issue ไปแล้ว ระบบจะไม่สร้าง issue ใหม่ (ข้อความซ้ำ) → ควรเพิ่ม <code>AND status &lt;&gt; 'CLOSED'</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- NEXT -->
+  <section>
+    <h2><span class="dot"></span>แผนแก้ที่แนะนำ (เรียงลำดับ)</h2>
+    <div class="card">
+      <table>
+        <thead><tr><th style="width:50px">ลำดับ</th><th>งาน</th><th style="width:110px">ทีมที่รับ</th></tr></thead>
+        <tbody>
+          <tr><td><b>1</b></td><td class="desc">ฟอร์มทำใบเสนอราคาใน JobDrawer (P0) — ปลด blocker ใหญ่สุด</td><td>SA → Dev → QA</td></tr>
+          <tr><td><b>2</b></td><td class="desc">เติมคอลัมน์สถานะที่หายในบอร์ด Production/Installation (Med, 1 บรรทัด/ไฟล์)</td><td>Dev → QA</td></tr>
+          <tr><td><b>3</b></td><td class="desc">การ์ด kanban กดได้ + อัปเดตสถานะแตะครั้งเดียว (P0)</td><td>SA → Dev → QA</td></tr>
+          <tr><td><b>4</b></td><td class="desc">POST /api/issues + ปุ่มแจ้งปัญหาใหม่ (P0)</td><td>SA → Dev → QA</td></tr>
+          <tr><td><b>5</b></td><td class="desc">แก้ RBAC ให้ BFF ↔ RLS ตรงกัน + กันมัดจำซ้ำ (High)</td><td>SA → Dev → Accountant → QA</td></tr>
+          <tr><td><b>6</b></td><td class="desc">view ค้างรับรายลูกค้า + toast feedback (P1)</td><td>Dev → QA</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- FOOT -->
+  <div class="foot">
+    <b>วิธีทดสอบ:</b> รัน multi-agent QA 6 ตัวแบบขนาน ตรวจด้วย code analysis (ไล่ตรรกะในโค้ดจริงเทียบ business rules ใน DB triggers, RBAC matrix, RLS policies และ acceptance criteria จาก PRD) — ยังไม่ได้รันแอปสดบนเครื่องจริง (ต้องมี Node + Supabase ต่อจริง) ดังนั้นบั๊ก runtime บางชนิดอาจต้องยืนยันซ้ำตอน manual test
+    <div class="agents">
+      <span>🧭 System Analyst × คุณนัท (UX)</span>
+      <span>🔐 Tester 1 — Auth &amp; RBAC</span>
+      <span>📋 Tester 2 — Sales / Jobs</span>
+      <span>🏭 Tester 3 — Production / Installation</span>
+      <span>💰 Tester 4 — Finance</span>
+      <span>📊 Tester 5 — Issues / Dashboard</span>
+    </div>
+    <p style="margin-top:12px">JR OMS · JR Aluminium and Glass · รายงานโดย Project Manager (orchestrator) · งานต้นฉบับของแต่ละ agent เก็บไว้ใน <code>docs/</code></p>
+  </div>
+
+</div>
+</body>
+</html>
