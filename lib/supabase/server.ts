@@ -16,11 +16,16 @@ export function createClient() {
         },
         setAll(cookiesToSet) {
           try {
+            // cookieStore is ReadonlyRequestCookies in Server Components
+            // (set/delete are stripped from the type but exist at runtime in Route Handlers)
+            const mutable = cookieStore as unknown as {
+              set: (name: string, value: string, options?: object) => void;
+            };
             cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
+              mutable.set(name, value, options)
             );
           } catch {
-            // called from a Server Component — middleware refreshes the session instead
+            // Called from a Server Component — middleware handles the refresh
           }
         },
       },

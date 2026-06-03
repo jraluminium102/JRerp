@@ -10,29 +10,42 @@ const FINANCE_COLS = ["net_amount", "vat_amount", "total_amount", "deposit_amoun
 export const GET = withRoute(async (req: Request) => {
   const ctx = await requirePermission("jobs", "read");
   const url = new URL(req.url);
-  const status = url.searchParams.get("status");
+  const statusFilter = url.searchParams.get("status");
   const q = url.searchParams.get("q");
   const page = Math.max(1, Number(url.searchParams.get("page") ?? 1));
   const limit = Math.min(100, Number(url.searchParams.get("limit") ?? 50));
   const from = (page - 1) * limit;
 
-  let query = ctx.supabase
+  // Build filter string for .or() separately to avoid type reassignment issues
+  const orFilter = q
+    ? `customer_name.ilike.%${q}%,job_code.ilike.%${q}%`
+    : null;
+
+  // Use the Supabase client as any to avoid complex generic chain type issues
+  // (Supabase's PostgrestFilterBuilder generics are overly complex for conditional chaining)
+  const sb = ctx.supabase as { from: (table: string) => any };
+
+  let query = sb
     .from("jobs")
-    .select("*, estimator:estimator_id(full_name), designer:designer_id(full_name), productions(status,status_updated_at), installations(status), issues(id,status)", { count: "exact" })
+    .select(
+      "*, estimator:estimator_id(full_name), designer:designer_id(full_name), productions(status,status_updated_at), installations(status), issues(id,status)",
+      { count: "exact" }
+    )
     .order("year", { ascending: false })
     .order("sequence", { ascending: false })
     .range(from, from + limit - 1);
 
-  if (status) query = query.eq("status", status);
-  if (q) query = query.or(`customer_name.ilike.%${q}%,job_code.ilike.%${q}%`);
+  if (statusFilter) query = query.eq("status", statusFilter);
+  if (orFilter) query = query.or(orFilter);
 
   const { data, count, error } = await query;
   if (error) throw new Error(error.message);
 
   const showFinance = can(ctx.role, "jobs:finance_fields", "read");
-  const rows = (data ?? []).map((j: any) => {
-    const openIssues = (j.issues ?? []).filter((i: any) => i.status !== "CLOSED").length;
-    const out: any = { ...j, open_issues: openIssues, issues: undefined };
+  const rows = (data ?? []).map((j: Record<string, unknown>) => {
+    const issues = (j.issues as { status: string }[] | null) ?? [];
+    const openIssues = issues.filter((i) => i.status !== "CLOSED").length;
+    const out: Record<string, unknown> = { ...j, open_issues: openIssues, issues: undefined };
     if (!showFinance) FINANCE_COLS.forEach((c) => delete out[c]);
     return out;
   });
@@ -49,7 +62,7 @@ const createSchema = z.object({
   estimator_id: z.string().uuid().optional(),
 });
 
-// POST /api/jobs — create (job_code มาจาก DB trigger)
+// POST /api/jobs — create
 export const POST = withRoute(async (req: Request) => {
   const ctx = await requirePermission("jobs", "write");
   const body = createSchema.parse(await req.json());
@@ -61,6 +74,13 @@ export const POST = withRoute(async (req: Request) => {
     .single();
   if (error || !data) throw new Error(error?.message ?? "Insert failed");
 
-  await audit({ jobId: data.id, userId: ctx.user.id, action: "JOB_CREATED", table: "jobs", recordId: data.id, newValue: { job_code: data.job_code, customer_name: data.customer_name } });
+  await audit({
+    jobId: data.id,
+    userId: ctx.user.id,
+    action: "JOB_CREATED",
+    table: "jobs",
+    recordId: data.id,
+    newValue: { job_code: data.job_code, customer_name: data.customer_name },
+  });
   return created(data);
 });
